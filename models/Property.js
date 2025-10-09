@@ -1,0 +1,90 @@
+import mongoose from "mongoose";
+
+const propertySchema = new mongoose.Schema({
+  propertyType: { 
+    type: String,
+    enum: ["Apartment", "Land", "House"],
+    required: true,
+  },
+  title: { 
+    type: String, 
+    required: true,
+    trim: true,
+    maxlength: 100
+  },
+  location: { 
+    type: String, 
+    required: true,
+    trim: true
+  },
+  price: { 
+    type: Number, 
+    required: true,
+    min: 0
+  },
+  size: { 
+    type: String,
+    trim: true
+  },
+  bedrooms: { 
+    type: Number,
+    min: 0
+  },
+  bathrooms: { 
+    type: Number,
+    min: 0
+  },
+  floor: { 
+    type: Number,
+    min: 0
+  },
+  agent: { 
+    type: String,
+    trim: true
+  },
+  amenities: [{ 
+    type: String, 
+    enum: [ 
+      "Equipped kitchen",
+      "Wi-Fi",
+      "Lake view",
+      "Free parking",
+      "Swimming pool",
+      "Light",
+      "Air conditioning",
+      "Gym",
+      "Fully Fitted Kitchen",
+      "Balcony",
+      "Water Heater", 
+      "CCTV",
+    ]
+  }],
+  description: { 
+    type: String,
+    trim: true,
+    maxlength: 1000
+  },
+  featured: {
+    type: Boolean,
+    default: false
+  },
+  images: [{
+    type: String,
+    validate: {
+      validator: function(url) {
+        return url.startsWith('http');
+      },
+      message: 'Image URL must be a valid URL'
+    }
+  }],
+}, { 
+  timestamps: true 
+});
+
+// Index for better query performance
+propertySchema.index({ propertyType: 1, price: 1 });
+propertySchema.index({ featured: 1, createdAt: -1 });
+
+const Property = mongoose.model('Property', propertySchema);
+
+export default Property;
