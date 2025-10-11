@@ -140,3 +140,14 @@ export const getPropertyById = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch property", error });
   }
 };
+
+
+// Get Featured Properties
+export const getFeaturedProperties = async (req, res) => {
+  try {
+    const featured = await Property.find({ featured: true });
+    res.json(featured);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch featured properties", error });
+  }
+};
