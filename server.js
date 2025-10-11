@@ -11,13 +11,13 @@ connectDB();
 const app = express();
 
 
-// app.use(cors());
+
 app.use(cors({
   origin: [
-    'http://localhost:2230/', // Your dev frontend
-    'https://niarobi.netlify.app/', // Your production frontend
+    'http://localhost:2330', // ✅ exact dev origin
+    'https://niarobi.netlify.app' // ✅ exact production origin
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true
 }));
 app.use(express.json());
