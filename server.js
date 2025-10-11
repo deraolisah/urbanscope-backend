@@ -4,7 +4,7 @@ import authRoutes from "./routes/authRoutes.js";
 import propertyRoutes from './routes/propertyRoutes.js';
 import { connectDB } from "./config/db.js";
 
-// 
+// CONNECT DATABASE
 connectDB();
 
 
@@ -17,6 +17,7 @@ app.use(cors({
     'http://localhost:2230/', // Your dev frontend
     'https://niarobi.netlify.app/', // Your production frontend
   ],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 }));
 app.use(express.json());
