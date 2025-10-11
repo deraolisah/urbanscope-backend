@@ -1,5 +1,4 @@
 import express from 'express';
-// import mongoose from 'mongoose';
 import cors from 'cors';
 import authRoutes from "./routes/authRoutes.js";
 import propertyRoutes from './routes/propertyRoutes.js';
