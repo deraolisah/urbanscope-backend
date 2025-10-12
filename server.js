@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
 });
 
 
-app.use('/api/user', authRoutes);
+app.use('/api/auth/', authRoutes);
 app.use('/api/properties', propertyRoutes);
 
 
