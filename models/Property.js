@@ -6,6 +6,10 @@ const propertySchema = new mongoose.Schema({
     enum: ["Apartment", "Land", "House"],
     required: true,
   },
+  propertyTransaction: {
+    type: String,
+    enum: ["Sale", "Rent"],
+  },
   title: { 
     type: String, 
     required: true,
@@ -39,8 +43,13 @@ const propertySchema = new mongoose.Schema({
     min: 0
   },
   agent: { 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  agentName: {
     type: String,
-    trim: true
+    required: true
   },
   amenities: [{ 
     type: String, 
@@ -68,6 +77,11 @@ const propertySchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'sold', 'rented'],
+    default: 'active'
+  },
   images: [{
     type: String,
     validate: {
@@ -84,6 +98,8 @@ const propertySchema = new mongoose.Schema({
 // Index for better query performance
 propertySchema.index({ propertyType: 1, price: 1 });
 propertySchema.index({ featured: 1, createdAt: -1 });
+propertySchema.index({ agent: 1 });
+propertySchema.index({ status: 1 });
 
 const Property = mongoose.model('Property', propertySchema);
 

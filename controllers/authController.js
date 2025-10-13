@@ -7,7 +7,7 @@ const generateToken = (id) => {
   });
 };
 
-// Register User
+// Register User (Only for users, not agents/admins)
 const registerUser = async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -17,7 +17,14 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = await User.create({ username, email, password });
+    // Force role to 'user' for public registration
+    const user = await User.create({ 
+      username, 
+      email, 
+      password,
+      role: 'user' 
+    });
+    
     if (user) {
       const token = generateToken(user._id);
       res.cookie('token', token, { 
@@ -30,7 +37,7 @@ const registerUser = async (req, res) => {
         user: { 
           id: user._id, 
           username: user.username, 
-          email: user.email ,
+          email: user.email,
           role: user.role 
         } 
       });
@@ -42,14 +49,58 @@ const registerUser = async (req, res) => {
   }
 };
 
+// Create Agent (Admin only)
+const createAgent = async (req, res) => {
+  const { username, email, password, profile } = req.body;
+
+  try {
+    const userExists = await User.findOne({ 
+      $or: [{ email }, { username }] 
+    });
+    
+    if (userExists) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const agent = await User.create({ 
+      username, 
+      email, 
+      password,
+      role: 'agent',
+      profile 
+    });
+    
+    res.status(201).json({ 
+      message: "Agent created successfully", 
+      agent: { 
+        id: agent._id, 
+        username: agent.username, 
+        email: agent.email,
+        role: agent.role,
+        profile: agent.profile
+      } 
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Login User
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, username });
     
     if (user && (await user.matchPassword(password))) {
+      if (!user.isActive) {
+        return res.status(401).json({ message: "Account is deactivated" });
+      }
+
+      // Update last login
+      user.lastLogin = new Date();
+      await user.save();
+
       const token = generateToken(user._id);
       res.cookie('token', token, { 
         httpOnly: true, 
@@ -62,7 +113,8 @@ const loginUser = async (req, res) => {
           id: user._id, 
           username: user.username, 
           email: user.email,
-          role: user.role 
+          role: user.role,
+          profile: user.profile
         } 
       });
     } else {
@@ -89,4 +141,10 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, logoutUser, getCurrentUser };
+export { 
+  registerUser, 
+  createAgent,
+  loginUser, 
+  logoutUser, 
+  getCurrentUser 
+};

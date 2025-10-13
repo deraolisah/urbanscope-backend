@@ -6,21 +6,41 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true,
+    minlength: 3,
+    maxlength: 30
   },
   email: {
     type: String,
     required: true,
     unique: true,
+    trim: true,
+    lowercase: true
   },
   password: {
     type: String,
     required: true,
+    minlength: 6
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
+    enum: ['user', 'agent', 'admin'],
     default: 'user'
   },
+  // profile: {
+  //   firstName: String,
+  //   lastName: String,
+  //   phone: String,
+  //   bio: String,
+  //   avatar: String
+  // },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  lastLogin: Date
+}, { 
+  timestamps: true 
 });
 
 userSchema.pre('save', async function (next) {
@@ -35,6 +55,10 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+// Index for better performance
+// userSchema.index({ email: 1 });
+userSchema.index({ role: 1 });
 
 const User = mongoose.model("User", userSchema);
 

@@ -4,7 +4,6 @@ import User from "../models/User.js";
 const protect = async (req, res, next) => {
   let token;
 
-  // Check for token in cookies
   if (req.cookies.token) {
     token = req.cookies.token;
   }
@@ -14,14 +13,15 @@ const protect = async (req, res, next) => {
   }
 
   try {
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Get user from token
     req.user = await User.findById(decoded.id).select('-password');
     
     if (!req.user) {
       return res.status(401).json({ message: "Not authorized, user not found" });
+    }
+    
+    if (!req.user.isActive) {
+      return res.status(401).json({ message: "Account is deactivated" });
     }
     
     next();
@@ -32,12 +32,30 @@ const protect = async (req, res, next) => {
 };
 
 const admin = (req, res, next) => {
-  // If you add an admin role to your User model later
-  if (req.user && req.user.isAdmin) {
+  if (req.user && req.user.role === 'admin') {
     next();
   } else {
     res.status(403).json({ message: "Not authorized as admin" });
   }
 };
 
-export { protect, admin };
+const agent = (req, res, next) => {
+  if (req.user && (req.user.role === 'agent' || req.user.role === 'admin')) {
+    next();
+  } else {
+    res.status(403).json({ message: "Not authorized as agent" });
+  }
+};
+
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: `User role ${req.user.role} is not authorized to access this route` 
+      });
+    }
+    next();
+  };
+};
+
+export { protect, admin, agent, authorize };

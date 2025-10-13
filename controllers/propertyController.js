@@ -1,18 +1,20 @@
 import cloudinary from "../config/cloudinary.js";
 import Property from "../models/Property.js";
-import { 
-  // uploadImagesToCloudinary, 
-  deletePropertyImages, 
-  // parseAmenities 
-} from "../utils/cloudinaryUtils.js";
+import User from "../models/User.js";
+import { deletePropertyImages } from "../utils/cloudinaryUtils.js";
 
-// Add New Property
+// Add New Property (Agent only)
 export const addProperty = async (req, res) => {
   try {
-    const imageFiles = req.files; // array of uploaded images
+    const imageFiles = req.files;
     const imageUrls = [];
+    const agent = await User.findById(req.user.id);
 
-    // Upload images to Cloudinary sequentially
+    if (!agent || agent.role !== 'agent') {
+      return res.status(403).json({ message: "Only agents can add properties" });
+    }
+
+    // Upload images to Cloudinary
     for (const file of imageFiles) {
       const result = await new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream(
@@ -26,7 +28,7 @@ export const addProperty = async (req, res) => {
       imageUrls.push(result.secure_url);
     }
 
-    // Parse amenities if it's a string (common when sending from frontend)
+    // Parse amenities
     const amenities = Array.isArray(req.body.amenities) 
       ? req.body.amenities 
       : JSON.parse(req.body.amenities || '[]');
@@ -35,6 +37,8 @@ export const addProperty = async (req, res) => {
       ...req.body,
       amenities,
       images: imageUrls,
+      agent: req.user.id,
+      agentName: `${agent.profile?.firstName || agent.username} ${agent.profile?.lastName || ''}`.trim()
     });
 
     const savedProperty = await newProperty.save();
@@ -44,15 +48,25 @@ export const addProperty = async (req, res) => {
   }
 };
 
-
-// Update Property
+// Update Property (Agent who owns it or Admin)
 export const updateProperty = async (req, res) => {
   try {
     const { id } = req.params;
+    const property = await Property.findById(id);
+    
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+
+    // Check if user can update this property
+    if (req.user.role === 'agent' && property.agent.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to update this property" });
+    }
+
     const updateData = { ...req.body };
     const imageFiles = req.files;
 
-    // Handle image uploads if new images are provided
+    // Handle image uploads
     if (imageFiles && imageFiles.length > 0) {
       const imageUrls = [];
       
@@ -69,11 +83,7 @@ export const updateProperty = async (req, res) => {
         imageUrls.push(result.secure_url);
       }
 
-      // Get existing property to preserve old images if needed
-      const existingProperty = await Property.findById(id);
-      const existingImages = existingProperty ? existingProperty.images : [];
-      
-      updateData.images = [...existingImages, ...imageUrls];
+      updateData.images = [...property.images, ...imageUrls];
     }
 
     // Parse amenities if needed
@@ -86,10 +96,6 @@ export const updateProperty = async (req, res) => {
       runValidators: true 
     });
     
-    if (!updated) {
-      return res.status(404).json({ message: "Property not found" });
-    }
-    
     res.status(200).json(updated);
   } catch (error) {
     console.error("Update property error:", error);
@@ -97,14 +103,18 @@ export const updateProperty = async (req, res) => {
   }
 };
 
-
-// Delete Property
+// Delete Property (Agent who owns it or Admin)
 export const deleteProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
     
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
+    }
+
+    // Check if user can delete this property
+    if (req.user.role === 'agent' && property.agent.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this property" });
     }
 
     // Delete images from Cloudinary
@@ -120,10 +130,23 @@ export const deleteProperty = async (req, res) => {
   }
 };
 
-// Get All Properties
+// Get All Properties (with agent population)
 export const getAllProperties = async (req, res) => {
   try {
-    const properties = await Property.find();
+    const properties = await Property.find({ status: 'active' })
+      .populate('agent', 'username profile')
+      .sort({ createdAt: -1 });
+    res.status(200).json(properties);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch properties", error });
+  }
+};
+
+// Get Agent's Properties
+export const getAgentProperties = async (req, res) => {
+  try {
+    const properties = await Property.find({ agent: req.user.id })
+      .sort({ createdAt: -1 });
     res.status(200).json(properties);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch properties", error });
@@ -133,7 +156,8 @@ export const getAllProperties = async (req, res) => {
 // Get A Single Property
 export const getPropertyById = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const property = await Property.findById(req.params.id)
+      .populate('agent', 'username profile email');
     if (!property) return res.status(404).json({ message: "Property not found" });
     res.status(200).json(property);
   } catch (error) {
@@ -141,11 +165,16 @@ export const getPropertyById = async (req, res) => {
   }
 };
 
-
 // Get Featured Properties
 export const getFeaturedProperties = async (req, res) => {
   try {
-    const featured = await Property.find({ featured: true });
+    const featured = await Property.find({ 
+      featured: true, 
+      status: 'active' 
+    })
+    .populate('agent', 'username profile')
+    .limit(6)
+    .sort({ createdAt: -1 });
     res.json(featured);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch featured properties", error });
