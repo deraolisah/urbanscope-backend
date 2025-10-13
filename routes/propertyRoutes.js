@@ -9,7 +9,7 @@ import {
   getFeaturedProperties,
   getAgentProperties
 } from "../controllers/propertyController.js";
-import { protect, agent, admin } from "../middlewares/authMiddleware.js";
+import { protect, agent, admin, authorize } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -19,8 +19,8 @@ router.get('/featured', getFeaturedProperties);
 router.get("/:id", getPropertyById);
 
 // Protected routes
-router.post("/", protect, agent, upload.array("images"), addProperty);
-router.put("/:id", protect, agent, updateProperty);
+router.post("/", upload.array("images"), addProperty);
+router.put("/:id", updateProperty);
 router.delete("/:id", protect, agent, deleteProperty);
 router.get("/agent/my-properties", protect, agent, getAgentProperties);
 

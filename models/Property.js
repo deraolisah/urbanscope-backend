@@ -42,14 +42,14 @@ const propertySchema = new mongoose.Schema({
     type: Number,
     min: 0
   },
-  agent: { 
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
+  // agent: { 
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'User',
+  //   // required: true
+  // },
   agentName: {
     type: String,
-    required: true
+    // required: true
   },
   amenities: [{ 
     type: String, 

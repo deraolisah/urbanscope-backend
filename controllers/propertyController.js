@@ -8,11 +8,11 @@ export const addProperty = async (req, res) => {
   try {
     const imageFiles = req.files;
     const imageUrls = [];
-    const agent = await User.findById(req.user.id);
+    // const agent = await User.findById(req.user.id);
 
-    if (!agent || agent.role !== 'agent') {
-      return res.status(403).json({ message: "Only agents can add properties" });
-    }
+    // if (!agent || agent.role !== 'agent') {
+    //   return res.status(403).json({ message: "Only agents can add properties" });
+    // }
 
     // Upload images to Cloudinary
     for (const file of imageFiles) {
@@ -37,13 +37,15 @@ export const addProperty = async (req, res) => {
       ...req.body,
       amenities,
       images: imageUrls,
-      agent: req.user.id,
-      agentName: `${agent.profile?.firstName || agent.username} ${agent.profile?.lastName || ''}`.trim()
+      // agent: req.user.id,
+      // agentName: req.user.username
+      // agentName: `${agent.profile?.firstName || agent.username} ${agent.profile?.lastName || ''}`.trim()
     });
 
     const savedProperty = await newProperty.save();
     res.status(201).json(savedProperty);
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: "Failed to add property", error });
   }
 };
@@ -59,9 +61,9 @@ export const updateProperty = async (req, res) => {
     }
 
     // Check if user can update this property
-    if (req.user.role === 'agent' && property.agent.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Not authorized to update this property" });
-    }
+    // if (req.user.role === 'agent' && property.agent.toString() !== req.user.id) {
+    //   return res.status(403).json({ message: "Not authorized to update this property" });
+    // }
 
     const updateData = { ...req.body };
     const imageFiles = req.files;
