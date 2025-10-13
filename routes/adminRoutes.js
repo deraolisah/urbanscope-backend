@@ -5,7 +5,7 @@ import {
   updateUser,
   deleteUser,
   getAgents
-} from "../controllers/userController.js";
+} from "../controllers/adminController.js";
 import { protect, admin, authorize } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();

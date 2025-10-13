@@ -131,16 +131,16 @@ export const deleteProperty = async (req, res) => {
 };
 
 // Get All Properties (with agent population)
-export const getAllProperties = async (req, res) => {
-  try {
-    const properties = await Property.find({ status: 'active' })
-      .populate('agent', 'username profile')
-      .sort({ createdAt: -1 });
-    res.status(200).json(properties);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch properties", error });
-  }
-};
+// export const getAllProperties = async (req, res) => {
+//   try {
+//     const properties = await Property.find({ status: 'active' })
+//       .populate('agent', 'username profile')
+//       .sort({ createdAt: -1 });
+//     res.status(200).json(properties);
+//   } catch (error) {
+//     res.status(500).json({ message: "Failed to fetch properties", error });
+//   }
+// };
 
 // Get Agent's Properties
 export const getAgentProperties = async (req, res) => {
@@ -153,11 +153,21 @@ export const getAgentProperties = async (req, res) => {
   }
 };
 
+
+// Get All Properties
+export const getAllProperties = async (req, res) => {
+  try {
+    const properties = await Property.find();
+    res.status(200).json(properties);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch properties", error });
+  }
+};
+
 // Get A Single Property
 export const getPropertyById = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id)
-      .populate('agent', 'username profile email');
+    const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ message: "Property not found" });
     res.status(200).json(property);
   } catch (error) {
@@ -165,16 +175,11 @@ export const getPropertyById = async (req, res) => {
   }
 };
 
+
 // Get Featured Properties
 export const getFeaturedProperties = async (req, res) => {
   try {
-    const featured = await Property.find({ 
-      featured: true, 
-      status: 'active' 
-    })
-    .populate('agent', 'username profile')
-    .limit(6)
-    .sort({ createdAt: -1 });
+    const featured = await Property.find({ featured: true });
     res.json(featured);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch featured properties", error });

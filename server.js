@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from "./routes/authRoutes.js";
 import propertyRoutes from './routes/propertyRoutes.js';
+import adminRoutes from "./routes/adminRoutes.js";
 import cookieParser from 'cookie-parser';
 import { connectDB } from "./config/db.js";
 
@@ -30,8 +31,9 @@ app.get("/", (req, res) => {
 });
 
 
-app.use('/api/auth/', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
+app.use('/api/admin', adminRoutes);
 
 
 const PORT = process.env.PORT || 3000;
