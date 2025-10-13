@@ -19,8 +19,8 @@ router.get('/featured', getFeaturedProperties);
 router.get("/:id", getPropertyById);
 
 // Protected routes
-router.post("/", upload.array("images"), addProperty);
-router.put("/:id", updateProperty);
+router.post("/", protect, agent, upload.array("images"), addProperty);
+router.put("/:id", protect, agent, updateProperty);
 router.delete("/:id", protect, agent, deleteProperty);
 router.get("/agent/my-properties", protect, agent, getAgentProperties);
 

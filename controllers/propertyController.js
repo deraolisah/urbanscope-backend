@@ -55,15 +55,16 @@ export const updateProperty = async (req, res) => {
   try {
     const { id } = req.params;
     const property = await Property.findById(id);
+    const agent = await User.findById(req.user.id);
     
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
 
     // Check if user can update this property
-    // if (req.user.role === 'agent' && property.agent.toString() !== req.user.id) {
-    //   return res.status(403).json({ message: "Not authorized to update this property" });
-    // }
+    if (req.user.role === 'agent' && property.agent.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to update this property" });
+    }
 
     const updateData = { ...req.body };
     const imageFiles = req.files;
@@ -115,7 +116,7 @@ export const deleteProperty = async (req, res) => {
     }
 
     // Check if user can delete this property
-    if (req.user.role === 'agent' && property.agent.toString() !== req.user.id) {
+    if (req.user.role === 'agent' && (!property.agent || property.agent.toString() !== req.user.id)) {
       return res.status(403).json({ message: "Not authorized to delete this property" });
     }
 
@@ -131,7 +132,6 @@ export const deleteProperty = async (req, res) => {
     res.status(500).json({ message: "Failed to delete property", error: error.message });
   }
 };
-
 // Get All Properties (with agent population)
 // export const getAllProperties = async (req, res) => {
 //   try {

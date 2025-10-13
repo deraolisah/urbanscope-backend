@@ -3,24 +3,24 @@ import User from "../models/User.js";
 // Get all users (Admin only)
 const getUsers = async (req, res) => {
   try {
-    const { role, page = 1, limit = 10 } = req.query;
+    // const { role, page = 1, limit = 10 } = req.query;
     
     const query = {};
     if (role) query.role = role;
     
     const users = await User.find(query)
       .select('-password')
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+      // .sort({ createdAt: -1 })
+      // .limit(limit * 1)
+      // .skip((page - 1) * limit);
     
-    const total = await User.countDocuments(query);
+    // const total = await User.countDocuments(query);
     
     res.status(200).json({
       users,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      total
+      // totalPages: Math.ceil(total / limit),
+      // currentPage: page,
+      // total
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
