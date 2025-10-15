@@ -49,42 +49,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Create Agent (Admin only)
-// const createAgent = async (req, res) => {
-//   const { username, email, password, profile } = req.body;
-
-//   try {
-//     const userExists = await User.findOne({ 
-//       $or: [{ email }, { username }] 
-//     });
-    
-//     if (userExists) {
-//       return res.status(400).json({ message: "User already exists" });
-//     }
-
-//     const agent = await User.create({ 
-//       username, 
-//       email, 
-//       password,
-//       role: 'agent',
-//       profile 
-//     });
-    
-//     res.status(201).json({ 
-//       message: "Agent created successfully", 
-//       agent: { 
-//         id: agent._id, 
-//         username: agent.username, 
-//         email: agent.email,
-//         role: agent.role,
-//         profile: agent.profile
-//       } 
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
 // Login User
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -128,11 +92,19 @@ const loginUser = async (req, res) => {
   }
 };
 
-// Logout User
+
+// Logout User - CORRECTED VERSION
 const logoutUser = (req, res) => {
-  res.clearCookie('token');
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // Must match login settings
+    sameSite: 'None', // Must match login settings
+    // domain: 'your-domain.com', // Add if using specific domain
+    // path: '/' // Ensure path matches
+  });
   res.status(200).json({ message: "Logout successful" });
 };
+
 
 // Get Current User
 const getCurrentUser = async (req, res) => {
