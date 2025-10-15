@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRoutes from "./routes/authRoutes.js";
 import propertyRoutes from './routes/propertyRoutes.js';
 import adminRoutes from "./routes/adminRoutes.js";
+import favoriteRoutes from './routes/favoriteRoutes.js';
 import cookieParser from 'cookie-parser';
 import { connectDB } from "./config/db.js";
 
@@ -14,6 +15,7 @@ const app = express();
 
 
 
+app.use(cookieParser());
 app.use(cors({
   origin: [
     'http://localhost:2330', // ✅ exact dev origin
@@ -23,7 +25,6 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.use(cookieParser());
 
 
 app.get("/", (req, res) => {
@@ -34,9 +35,11 @@ app.get("/", (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 export default app;

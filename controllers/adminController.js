@@ -3,25 +3,16 @@ import User from "../models/User.js";
 // Get all users (Admin only)
 const getUsers = async (req, res) => {
   try {
-    // const { role, page = 1, limit = 10 } = req.query;
+    const { role } = req.query; // Add this line to get role from query params
     
     const query = {};
     if (role) query.role = role;
     
     const users = await User.find(query)
       .select('-password')
-      // .sort({ createdAt: -1 })
-      // .limit(limit * 1)
-      // .skip((page - 1) * limit);
+      .sort({ createdAt: -1 })
     
-    // const total = await User.countDocuments(query);
-    
-    res.status(200).json({
-      users,
-      // totalPages: Math.ceil(total / limit),
-      // currentPage: page,
-      // total
-    });
+    res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -92,22 +83,22 @@ const deleteUser = async (req, res) => {
 };
 
 // Get all agents
-const getAgents = async (req, res) => {
-  try {
-    const agents = await User.find({ role: 'agent', isActive: true })
-      .select('-password')
-      .sort({ 'profile.firstName': 1 });
+// const getAgents = async (req, res) => {
+//   try {
+//     const agents = await User.find({ role: 'agent', isActive: true })
+//       .select('-password')
+//       .sort({ 'profile.firstName': 1 });
     
-    res.status(200).json(agents);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+//     res.status(200).json(agents);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 
 export {
   getUsers,
   getUserById,
   updateUser,
   deleteUser,
-  getAgents
+  // getAgents
 };

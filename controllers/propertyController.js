@@ -3,16 +3,30 @@ import Property from "../models/Property.js";
 import User from "../models/User.js";
 import { deletePropertyImages } from "../utils/cloudinaryUtils.js";
 
-// Add New Property (Agent only)
+// Add New Property (Admin only)
 export const addProperty = async (req, res) => {
   try {
     const imageFiles = req.files;
-    const imageUrls = [];
-    // const agent = await User.findById(req.user.id);
+    const admin = await User.findById(req.user.id);
+    
+    if (!admin || admin.role !== 'admin') {
+      return res.status(403).json({ message: "Only admins can add properties" });
+    }
 
-    // if (!agent || agent.role !== 'agent') {
-    //   return res.status(403).json({ message: "Only agents can add properties" });
-    // }
+    // Validate required fields
+    const requiredFields = ['propertyType', 'propertyTransaction', 'title', 'location', 'price'];
+    for (let field of requiredFields) {
+      if (!req.body[field]) {
+        return res.status(400).json({ message: `${field} is required` });
+      }
+    }
+
+    // Validate images
+    if (!imageFiles || imageFiles.length === 0) {
+      return res.status(400).json({ message: "At least one image is required" });
+    }
+
+    const imageUrls = [];
 
     // Upload images to Cloudinary
     for (const file of imageFiles) {
@@ -37,37 +51,104 @@ export const addProperty = async (req, res) => {
       ...req.body,
       amenities,
       images: imageUrls,
-      // agent: req.user.id,
-      // agentName: req.user.username
-      // agentName: `${agent.profile?.firstName || agent.username} ${agent.profile?.lastName || ''}`.trim()
+      price: parseFloat(req.body.price),
+      bedrooms: req.body.bedrooms ? parseInt(req.body.bedrooms) : undefined,
+      bathrooms: req.body.bathrooms ? parseInt(req.body.bathrooms) : undefined,
+      floor: req.body.floor ? parseInt(req.body.floor) : undefined,
     });
 
     const savedProperty = await newProperty.save();
     res.status(201).json(savedProperty);
   } catch (error) {
-    console.log(error)
-    res.status(500).json({ message: "Failed to add property", error });
+    console.error("Add property error:", error);
+    res.status(500).json({ message: "Failed to add property", error: error.message });
   }
 };
 
-// Update Property (Agent who owns it or Admin)
+
+// Update Property (Admin)
 export const updateProperty = async (req, res) => {
   try {
     const { id } = req.params;
     const property = await Property.findById(id);
-    const agent = await User.findById(req.user.id);
     
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
 
-    // Check if user can update this property
-    if (req.user.role === 'agent' && property.agent.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Not authorized to update this property" });
+    // Admin can update any property
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Only admins can update properties" });
     }
 
-    const updateData = { ...req.body };
+    // Debug: Log the incoming request
+    console.log("=== UPDATE PROPERTY REQUEST ===");
+    console.log("Request body:", req.body);
+    console.log("Files:", req.files ? req.files.length : 0);
+    
+    // Check if req.body exists, if not, create an empty object
+    const body = req.body || {};
+    console.log("Amenities in body:", body.amenities);
+    console.log("Type of amenities:", typeof body.amenities);
+    console.log("===============================");
+
+    const updateData = {};
     const imageFiles = req.files;
+
+    // Handle each field individually - use 'body' instead of 'req.body'
+    const fieldsToUpdate = [
+      'propertyType', 'propertyTransaction', 'title', 'location', 
+      'price', 'size', 'bedrooms', 'bathrooms', 'floor', 
+      'agentName', 'agentNumber', 'description', 'status', 'videoUrl'
+    ];
+
+    // Copy fields from body if they exist
+    fieldsToUpdate.forEach(field => {
+      if (body[field] !== undefined && body[field] !== null && body[field] !== '') {
+        updateData[field] = body[field];
+      }
+    });
+
+    // Handle numeric fields with proper parsing
+    if (body.price !== undefined && body.price !== '') {
+      updateData.price = parseFloat(body.price) || 0;
+    }
+    if (body.bedrooms !== undefined && body.bedrooms !== '') {
+      updateData.bedrooms = parseInt(body.bedrooms) || 0;
+    }
+    if (body.bathrooms !== undefined && body.bathrooms !== '') {
+      updateData.bathrooms = parseInt(body.bathrooms) || 0;
+    }
+    if (body.floor !== undefined && body.floor !== '') {
+      updateData.floor = parseInt(body.floor) || 0;
+    }
+
+    // Handle boolean field
+    if (body.featured !== undefined) {
+      updateData.featured = body.featured === 'true' || body.featured === true;
+    }
+
+    // Handle amenities - SAFE APPROACH using 'body'
+    if (body.amenities !== undefined && body.amenities !== null && body.amenities !== '') {
+      try {
+        if (Array.isArray(body.amenities)) {
+          updateData.amenities = body.amenities;
+        } else if (typeof body.amenities === 'string') {
+          // Try to parse as JSON
+          const parsedAmenities = JSON.parse(body.amenities);
+          updateData.amenities = Array.isArray(parsedAmenities) ? parsedAmenities : [];
+        } else {
+          updateData.amenities = [];
+        }
+      } catch (parseError) {
+        console.error("Error parsing amenities:", parseError);
+        // If parsing fails, use existing amenities
+        updateData.amenities = property.amenities || [];
+      }
+    } else {
+      // If amenities is not provided in the request, keep the existing ones
+      updateData.amenities = property.amenities || [];
+    }
 
     // Handle image uploads
     if (imageFiles && imageFiles.length > 0) {
@@ -86,13 +167,11 @@ export const updateProperty = async (req, res) => {
         imageUrls.push(result.secure_url);
       }
 
-      updateData.images = [...property.images, ...imageUrls];
+      // Combine existing images with new ones
+      updateData.images = [...(property.images || []), ...imageUrls];
     }
 
-    // Parse amenities if needed
-    if (req.body.amenities && typeof req.body.amenities === 'string') {
-      updateData.amenities = JSON.parse(req.body.amenities);
-    }
+    console.log("Final update data:", updateData);
 
     const updated = await Property.findByIdAndUpdate(id, updateData, { 
       new: true, 
@@ -106,7 +185,7 @@ export const updateProperty = async (req, res) => {
   }
 };
 
-// Delete Property (Agent who owns it or Admin)
+// Delete Property (Admin)
 export const deleteProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
@@ -116,7 +195,7 @@ export const deleteProperty = async (req, res) => {
     }
 
     // Check if user can delete this property
-    if (req.user.role === 'agent' && (!property.agent || property.agent.toString() !== req.user.id)) {
+    if (req.user.role === 'admin' && (!property.agent || property.agent.toString() !== req.user.id)) {
       return res.status(403).json({ message: "Not authorized to delete this property" });
     }
 

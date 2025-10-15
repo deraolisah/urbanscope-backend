@@ -42,14 +42,18 @@ const propertySchema = new mongoose.Schema({
     type: Number,
     min: 0
   },
-  agent: { 
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    // required: true
-  },
+  // agent: { 
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'User',
+  //   // required: true
+  // },
   agentName: {
     type: String,
     // required: true
+  },
+  agentNumber: {
+    type: String,
+    // bio: String,
   },
   amenities: [{ 
     type: String, 
@@ -91,6 +95,17 @@ const propertySchema = new mongoose.Schema({
       message: 'Image URL must be a valid URL'
     }
   }],
+  // Add video URL field
+  videoUrl: {
+    type: String,
+    validate: {
+      validator: function(url) {
+        if (!url) return true; // Optional field
+        return url.startsWith('http');
+      },
+      message: 'Video URL must be a valid URL'
+    }
+  },
 }, { 
   timestamps: true 
 });

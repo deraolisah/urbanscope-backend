@@ -4,14 +4,14 @@ import {
   getUserById,
   updateUser,
   deleteUser,
-  getAgents
+  // getAgents
 } from "../controllers/adminController.js";
-import { protect, admin, authorize } from "../middlewares/authMiddleware.js";
+import { protect, admin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.get('/', protect, admin, getUsers);
-router.get('/agents', getAgents);
+router.get('/users', protect, admin, getUsers);
+// router.get('/agents', getAgents);
 router.get('/:id', protect, getUserById);
 router.put('/:id', protect, updateUser);
 router.delete('/:id', protect, admin, deleteUser);

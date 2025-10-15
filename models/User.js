@@ -24,16 +24,14 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'agent', 'admin'],
+    enum: ['user', 'admin'],
     default: 'user'
   },
-  // profile: {
-  //   firstName: String,
-  //   lastName: String,
-  //   phone: String,
-  //   bio: String,
-  //   avatar: String
-  // },
+   // Add favorites array
+  favorites: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Property'
+  }],
   isActive: {
     type: Boolean,
     default: true
