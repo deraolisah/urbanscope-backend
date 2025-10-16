@@ -31,7 +31,7 @@ export const deletePropertyImages = async (imageUrls) => {
     for (const imageUrl of imageUrls) {
       // Extract public_id from Cloudinary URL
       const publicId = imageUrl.split('/').pop().split('.')[0];
-      const fullPublicId = `niarobi-properties/${publicId}`;
+      const fullPublicId = `urban-scope/${publicId}`;
       
       await cloudinary.uploader.destroy(fullPublicId);
     }
