@@ -19,7 +19,7 @@ app.use(cookieParser());
 app.use(cors({
   origin: [
     'http://localhost:2330', // ✅ exact dev origin
-    'https://niarobi.netlify.app' // ✅ exact production origin
+    'https://urbanscope.netlify.app' // ✅ exact production origin
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true
@@ -28,7 +28,7 @@ app.use(express.json());
 
 
 app.get("/", (req, res) => {
-  res.json("Niarobi Apartments Api");
+  res.json("Urban Scope Api");
 });
 
 
