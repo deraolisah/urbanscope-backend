@@ -55,22 +55,12 @@ const propertySchema = new mongoose.Schema({
     type: String,
     // bio: String,
   },
+  agentBio: {
+    type: String,
+  },
   amenities: [{ 
-    type: String, 
-    enum: [ 
-      "Equipped kitchen",
-      "Wi-Fi",
-      "Lake view",
-      "Free parking",
-      "Swimming pool",
-      "Light",
-      "Air conditioning",
-      "Gym",
-      "Fully Fitted Kitchen",
-      "Balcony",
-      "Water Heater", 
-      "CCTV",
-    ]
+    type: String,
+    trim: true
   }],
   description: { 
     type: String,

@@ -32,7 +32,7 @@ export const addProperty = async (req, res) => {
     for (const file of imageFiles) {
       const result = await new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream(
-          { folder: "niarobi-properties" },
+          { folder: "urban-scope" },
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
@@ -43,13 +43,22 @@ export const addProperty = async (req, res) => {
     }
 
     // Parse amenities
-    const amenities = Array.isArray(req.body.amenities) 
-      ? req.body.amenities 
-      : JSON.parse(req.body.amenities || '[]');
+    // const amenities = Array.isArray(req.body.amenities) 
+    //   ? req.body.amenities 
+    //   : JSON.parse(req.body.amenities || '[]');
+
+    // In both addProperty and updateProperty controllers
+    // Replace the amenities parsing with:
+    const amenities = typeof req.body.amenities === 'string' 
+      ? JSON.parse(req.body.amenities)
+      : req.body.amenities || [];
+
+    // Make sure it's always an array
+    const amenitiesArray = Array.isArray(amenities) ? amenities : [];
 
     const newProperty = new Property({
       ...req.body,
-      amenities,
+      amenities: amenitiesArray,
       images: imageUrls,
       price: parseFloat(req.body.price),
       bedrooms: req.body.bedrooms ? parseInt(req.body.bedrooms) : undefined,
@@ -98,7 +107,7 @@ export const updateProperty = async (req, res) => {
     // Handle each field individually - use 'body' instead of 'req.body'
     const fieldsToUpdate = [
       'propertyType', 'propertyTransaction', 'title', 'location', 
-      'price', 'size', 'bedrooms', 'bathrooms', 'floor', 
+      'price', 'size', 'bedrooms', 'bathrooms', 'floor', 'amenities',
       'agentName', 'agentNumber', 'description', 'status', 'videoUrl'
     ];
 
@@ -157,7 +166,7 @@ export const updateProperty = async (req, res) => {
       for (const file of imageFiles) {
         const result = await new Promise((resolve, reject) => {
           cloudinary.uploader.upload_stream(
-            { folder: "niarobi-properties" },
+            { folder: "urban-scope" },
             (error, result) => {
               if (error) reject(error);
               else resolve(result);
