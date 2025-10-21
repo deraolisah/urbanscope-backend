@@ -43,6 +43,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/favorites', favoriteRoutes);
 
 
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
