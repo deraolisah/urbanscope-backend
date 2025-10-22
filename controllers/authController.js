@@ -27,11 +27,8 @@ const registerUser = async (req, res) => {
     
     if (user) {
       const token = generateToken(user._id);
-      res.cookie('token', token, { 
-        httpOnly: true, 
-        secure: process.env.NODE_ENV === 'production', 
-        maxAge: 3600000 
-      });
+      
+      // Return token in response instead of setting cookie
       res.status(201).json({ 
         message: "User registered successfully", 
         user: { 
@@ -39,7 +36,8 @@ const registerUser = async (req, res) => {
           username: user.username, 
           email: user.email,
           role: user.role 
-        } 
+        },
+        token // Send token in response
       });
     } else {
       res.status(400).json({ message: "Invalid user data" });
@@ -66,13 +64,8 @@ const loginUser = async (req, res) => {
       await user.save();
 
       const token = generateToken(user._id);
-      res.cookie('token', token, { 
-        httpOnly: true, 
-        // secure: process.env.NODE_ENV === 'production', 
-        secure: true, 
-        sameSite: 'None',
-        maxAge: 3600000 
-      });
+      
+      // Return token in response instead of setting cookie
       res.status(200).json({ 
         message: "Login successful", 
         user: {
@@ -80,9 +73,9 @@ const loginUser = async (req, res) => {
           username: user.username, 
           email: user.email,
           role: user.role,
-          token: token,
           profile: user.profile
-        } 
+        },
+        token // Send token in response
       });
     } else {
       res.status(401).json({ message: "Invalid email or password" });
@@ -92,19 +85,10 @@ const loginUser = async (req, res) => {
   }
 };
 
-
-// Logout User - CORRECTED VERSION
+// Logout User - Now handled on client side
 const logoutUser = (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // Must match login settings
-    sameSite: 'None', // Must match login settings
-    // domain: 'your-domain.com', // Add if using specific domain
-    // path: '/' // Ensure path matches
-  });
   res.status(200).json({ message: "Logout successful" });
 };
-
 
 // Get Current User
 const getCurrentUser = async (req, res) => {
@@ -118,7 +102,6 @@ const getCurrentUser = async (req, res) => {
 
 export { 
   registerUser, 
-  // createAgent,
   loginUser, 
   logoutUser, 
   getCurrentUser 
