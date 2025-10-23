@@ -18,6 +18,7 @@ import cloudinary from "../config/cloudinary.js";
 //       imageUrls.push(result.secure_url);
 //     }
 
+
 //     return imageUrls;
 //   } catch (error) {
 //     console.error("Error uploading images to Cloudinary:", error);
@@ -28,16 +29,19 @@ import cloudinary from "../config/cloudinary.js";
 // Delete images from Cloudinary when property is deleted
 export const deletePropertyImages = async (imageUrls) => {
   try {
-    for (const imageUrl of imageUrls) {
+    const deletePromises = imageUrls.map(async (imageUrl) => {
       // Extract public_id from Cloudinary URL
       const publicId = imageUrl.split('/').pop().split('.')[0];
       const fullPublicId = `urban-scope/${publicId}`;
       
-      await cloudinary.uploader.destroy(fullPublicId);
-    }
+      return cloudinary.uploader.destroy(fullPublicId);
+    });
+
+    await Promise.all(deletePromises);
+    console.log(`Successfully deleted ${imageUrls.length} images from Cloudinary`);
   } catch (error) {
-    console.error("Error deleting images from Cloudinary:", error);
-    // Don't throw error here as we don't want to block property deletion
+    console.error('Error deleting images from Cloudinary:', error);
+    throw error;
   }
 };
 

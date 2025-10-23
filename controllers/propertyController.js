@@ -85,40 +85,94 @@ export const updateProperty = async (req, res) => {
       return res.status(404).json({ message: "Property not found" });
     }
 
-    // Admin can update any property
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: "Only admins can update properties" });
     }
 
-    // Debug: Log the incoming request
     console.log("=== UPDATE PROPERTY REQUEST ===");
     console.log("Request body:", req.body);
     console.log("Files:", req.files ? req.files.length : 0);
     
-    // Check if req.body exists, if not, create an empty object
     const body = req.body || {};
-    console.log("Amenities in body:", body.amenities);
-    console.log("Type of amenities:", typeof body.amenities);
+    console.log("Current images:", body.currentImages);
+    console.log("Images to delete:", body.imagesToDelete);
     console.log("===============================");
 
     const updateData = {};
     const imageFiles = req.files;
 
-    // Handle each field individually - use 'body' instead of 'req.body'
+    // Handle images to delete
+    if (body.imagesToDelete) {
+      try {
+        const imagesToDelete = typeof body.imagesToDelete === 'string' 
+          ? JSON.parse(body.imagesToDelete)
+          : body.imagesToDelete;
+
+        if (Array.isArray(imagesToDelete) && imagesToDelete.length > 0) {
+          // Delete images from Cloudinary
+          await deletePropertyImages(imagesToDelete);
+          console.log(`Deleted ${imagesToDelete.length} images from Cloudinary`);
+        }
+      } catch (error) {
+        console.error("Error processing images to delete:", error);
+      }
+    }
+
+    // Handle current images (remaining images after deletions)
+    if (body.currentImages) {
+      try {
+        const currentImages = typeof body.currentImages === 'string'
+          ? JSON.parse(body.currentImages)
+          : body.currentImages;
+        
+        if (Array.isArray(currentImages)) {
+          updateData.images = currentImages;
+        }
+      } catch (error) {
+        console.error("Error processing current images:", error);
+        // If there's an error, keep existing images
+        updateData.images = property.images || [];
+      }
+    } else {
+      // If no current images provided, keep existing ones
+      updateData.images = property.images || [];
+    }
+
+    // Handle new image uploads
+    if (imageFiles && imageFiles.length > 0) {
+      const imageUrls = [];
+      
+      for (const file of imageFiles) {
+        const result = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream(
+            { folder: "urban-scope" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          ).end(file.buffer);
+        });
+        imageUrls.push(result.secure_url);
+      }
+
+      // Combine current images with new ones
+      updateData.images = [...(updateData.images || []), ...imageUrls];
+    }
+
+    // Handle other fields (your existing code)
     const fieldsToUpdate = [
       'propertyType', 'propertyTransaction', 'title', 'location', 
       'price', 'size', 'bedrooms', 'bathrooms', 'floor', 'amenities',
       'agentName', 'agentNumber', 'description', 'status', 'videoUrl'
     ];
 
-    // Copy fields from body if they exist
     fieldsToUpdate.forEach(field => {
       if (body[field] !== undefined && body[field] !== null && body[field] !== '') {
         updateData[field] = body[field];
       }
     });
 
-    // Handle numeric fields with proper parsing
+    // Handle numeric fields
     if (body.price !== undefined && body.price !== '') {
       updateData.price = parseFloat(body.price) || 0;
     }
@@ -137,13 +191,12 @@ export const updateProperty = async (req, res) => {
       updateData.featured = body.featured === 'true' || body.featured === true;
     }
 
-    // Handle amenities - SAFE APPROACH using 'body'
+    // Handle amenities
     if (body.amenities !== undefined && body.amenities !== null && body.amenities !== '') {
       try {
         if (Array.isArray(body.amenities)) {
           updateData.amenities = body.amenities;
         } else if (typeof body.amenities === 'string') {
-          // Try to parse as JSON
           const parsedAmenities = JSON.parse(body.amenities);
           updateData.amenities = Array.isArray(parsedAmenities) ? parsedAmenities : [];
         } else {
@@ -151,33 +204,10 @@ export const updateProperty = async (req, res) => {
         }
       } catch (parseError) {
         console.error("Error parsing amenities:", parseError);
-        // If parsing fails, use existing amenities
         updateData.amenities = property.amenities || [];
       }
     } else {
-      // If amenities is not provided in the request, keep the existing ones
       updateData.amenities = property.amenities || [];
-    }
-
-    // Handle image uploads
-    if (imageFiles && imageFiles.length > 0) {
-      const imageUrls = [];
-      
-      for (const file of imageFiles) {
-        const result = await new Promise((resolve, reject) => {
-          cloudinary.uploader.upload_stream(
-            { folder: "urban-scope" },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            }
-          ).end(file.buffer);
-        });
-        imageUrls.push(result.secure_url);
-      }
-
-      // Combine existing images with new ones
-      updateData.images = [...(property.images || []), ...imageUrls];
     }
 
     console.log("Final update data:", updateData);
@@ -193,6 +223,7 @@ export const updateProperty = async (req, res) => {
     res.status(500).json({ message: "Failed to update property", error: error.message });
   }
 };
+
 
 // Delete Property (Admin)
 export const deleteProperty = async (req, res) => {
