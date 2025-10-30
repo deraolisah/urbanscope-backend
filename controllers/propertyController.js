@@ -277,8 +277,12 @@ export const getAgentProperties = async (req, res) => {
 
 // Get All Properties
 export const getAllProperties = async (req, res) => {
+  // const status = req.query.status || 'active' || "sold" || "rented";
+
+
   try {
     const properties = await Property.find();
+    // const properties = await Property.find({ status });
     res.status(200).json(properties);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch properties", error });
