@@ -25,11 +25,11 @@ transporter.verify((error) => {
 // Email templates - UPDATED FOR CODE
 const emailTemplates = {
   passwordReset: (data) => ({
-    subject: 'Password Reset Code - Your Real Estate App',
+    subject: 'Password Reset Code - UrbanScope',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
-          <h1 style="margin: 0; font-size: 24px;">Real Estate App</h1>
+          <h1 style="margin: 0; font-size: 24px;"> UrbanScope </h1>
         </div>
         <div style="padding: 30px; background: #f9f9f9;">
           <h2 style="color: #333; margin-bottom: 20px;">Hello ${data.user.username},</h2>
@@ -50,23 +50,23 @@ const emailTemplates = {
         </div>
         <div style="background: #333; padding: 20px; text-align: center; color: #999;">
           <p style="margin: 0; font-size: 14px;">
-            &copy; ${new Date().getFullYear()} Real Estate App. All rights reserved.
+            &copy; ${new Date().getFullYear()} UrbanScope. All rights reserved.
           </p>
         </div>
       </div>
     `
   }),
   welcome: (data) => ({
-    subject: 'Welcome to Real Estate App!',
+    subject: 'Welcome to UrbanScope!',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
-          <h1 style="margin: 0; font-size: 24px;">Welcome to Real Estate App!</h1>
+          <h1 style="margin: 0; font-size: 24px;">Welcome to UrbanScope!</h1>
         </div>
         <div style="padding: 30px; background: #f9f9f9;">
           <h2 style="color: #333; margin-bottom: 20px;">Hello ${data.user.username},</h2>
           <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-            Thank you for registering with Real Estate App! We're excited to have you on board.
+            Thank you for registering with UrbanScope! We're excited to have you on board.
           </p>
           <p style="color: #666; line-height: 1.6;">
             Start exploring properties and find your dream home today!
@@ -74,7 +74,7 @@ const emailTemplates = {
         </div>
         <div style="background: #333; padding: 20px; text-align: center; color: #999;">
           <p style="margin: 0; font-size: 14px;">
-            &copy; ${new Date().getFullYear()} Real Estate App. All rights reserved.
+            &copy; ${new Date().getFullYear()} UrbanScope. All rights reserved.
           </p>
         </div>
       </div>
@@ -94,7 +94,7 @@ const sendEmail = async (to, templateName, data) => {
     const emailContent = template(data);
 
     const mailOptions = {
-      from: `"Real Estate App" <${process.env.EMAIL_USER}>`,
+      from: `"UrbanScope" <${process.env.EMAIL_USER}>`,
       to,
       subject: emailContent.subject,
       html: emailContent.html,
