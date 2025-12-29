@@ -3,8 +3,6 @@ import dotenv from "dotenv";
 
 dotenv.config({ quiet : true });
 
-
-// Create transporter
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE || 'gmail',
   auth: {
@@ -13,7 +11,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Verify transporter configuration
+
 transporter.verify((error) => {
   if (error) {
     console.error('Mail transporter error:', error);
@@ -22,7 +20,7 @@ transporter.verify((error) => {
   }
 });
 
-// Email templates - UPDATED FOR CODE
+
 const emailTemplates = {
   passwordReset: (data) => ({
     subject: 'Password Reset Code - UrbanScope',
